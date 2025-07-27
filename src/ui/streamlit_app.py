@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 import plotly.express as px
 import plotly.graph_objects as go
+from typing import Dict, Any, List, Optional
 
 # Importar componentes del sistema
 import sys
@@ -200,8 +201,14 @@ def chat_interface():
             if message["role"] == "user":
                 st.write(message["content"])
             else:
-                # Mostrar respuesta con formato
-                display_response(message["content"])
+                # Verificar si el contenido es string o dict
+                content = message["content"]
+                if isinstance(content, str):
+                    # Si es string, simplemente mostrarlo
+                    st.write(content)
+                else:
+                    # Si es dict (respuesta completa), mostrar con formato
+                    display_response(content)
                 
     # Input del usuario
     if prompt := st.chat_input("Escribe tu pregunta sobre los contratos..."):
@@ -215,8 +222,21 @@ def chat_interface():
         with st.chat_message("assistant"):
             with st.spinner("Buscando en los documentos..."):
                 response = process_query(prompt)
-                st.session_state.chat_history.append({"role": "assistant", "content": response})
-                display_response(response)
+                
+                # Guardar la respuesta completa pero mostrar solo el texto en el historial
+                if isinstance(response, dict) and 'answer' in response:
+                    # Para el historial, guardar solo el texto
+                    st.session_state.chat_history.append({
+                        "role": "assistant", 
+                        "content": response.get("answer", "No se pudo generar una respuesta")
+                    })
+                    # Mostrar la respuesta completa con formato
+                    display_response(response)
+                else:
+                    # Si algo salió mal, guardar y mostrar como texto
+                    error_msg = "Error al procesar la respuesta"
+                    st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
+                    st.error(error_msg)
 
 def process_query(query: str) -> Dict[str, Any]:
     """Procesa una consulta del usuario"""
@@ -338,7 +358,7 @@ def document_management():
             
             if st.button("💾 Guardar Índice"):
                 st.session_state.vector_store.save_index()
-                st.success("Índice guardado exitosamente")
+                st.success("Índice guardado correctamente")
 
 def process_uploaded_files(files):
     """Procesa archivos subidos"""

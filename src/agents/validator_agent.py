@@ -1420,7 +1420,7 @@ class ValidatorAgent(BaseAgent):
     def _generate_validation_summary(self, validation_data: Dict[str, Any]) -> str:
         """Genera un resumen de la validación"""
         if validation_data.get('is_valid'):
-            return "La respuesta ha sido validada exitosamente y está correctamente soportada por las fuentes."
+            return "La respuesta ha sido validada correctamente y está correctamente soportada por las fuentes."
         else:
             issues = len(validation_data.get('issues', []))
             warnings = len(validation_data.get('warnings', []))

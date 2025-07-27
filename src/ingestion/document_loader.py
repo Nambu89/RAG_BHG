@@ -96,7 +96,7 @@ class DocumentLoader:
         self.extraction_stats["extraction_time"] = (datetime.now() - start_time).total_seconds()
         self.loaded_documents.extend(documents)
         
-        logger.info(f"Cargados {len(documents)} documentos exitosamente")
+        logger.info(f"Cargados {len(documents)} documentos correctamente")
         logger.info(f"Estadísticas: {self.extraction_stats}")
         
         return documents

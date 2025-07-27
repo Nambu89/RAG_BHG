@@ -6,6 +6,7 @@ import tiktoken
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import spacy
 from collections import Counter
+import json
 
 from ..config.settings import settings
 from ..utils.logger import get_logger
@@ -118,11 +119,22 @@ class SmartChunker:
             
             # Preparar metadata del chunk
             chunk_metadata = base_metadata.copy()
+            
+            # Limpiar metadata para ChromaDB - convertir listas y valores problemáticos
+            for key, value in list(chunk_metadata.items()):
+                if isinstance(value, list):
+                    chunk_metadata[key] = json.dumps(value, ensure_ascii=False)
+                elif isinstance(value, dict):
+                    chunk_metadata[key] = json.dumps(value, ensure_ascii=False)
+                elif value is None:
+                    chunk_metadata[key] = ""
+            
+            # Agregar nueva metadata (también serializada si es necesario)
             chunk_metadata.update({
                 "chunk_method": "semantic" if doc_structure["has_sections"] else "sliding_window",
-                "section": self._extract_section_title(content, start_char),
-                "keywords": self._extract_keywords(chunk_content),
-                "entities": self._extract_entities(chunk_content) if self.nlp else []
+                "section": self._extract_section_title(content, start_char) or "",
+                "keywords": json.dumps(self._extract_keywords(chunk_content), ensure_ascii=False),
+                "entities": json.dumps(self._extract_entities(chunk_content) if self.nlp else [], ensure_ascii=False)
             })
             
             chunk_obj = Chunk(

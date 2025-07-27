@@ -131,44 +131,70 @@ Contenido:
         
         # System prompt mejorado con JSON
         system_prompt = f"""Eres un asistente experto en análisis de contratos legales.
-Tu tarea es responder preguntas basándote ÚNICAMENTE en el contexto proporcionado.
+    Tu tarea es responder preguntas basándote ÚNICAMENTE en el contexto proporcionado.
 
-IMPORTANTE: Debes responder SIEMPRE en formato JSON con la siguiente estructura:
-{{
-    "answer": "tu respuesta detallada aquí",
-    "confidence": 0.95,
-    "sources": [
-        {{
-            "doc_index": 1,
-            "excerpt": "texto relevante del documento"
-        }}
-    ],
-    "key_points": ["punto clave 1", "punto clave 2"],
-    "warnings": []
-}}
+    IMPORTANTE: Debes responder SIEMPRE en formato JSON con la siguiente estructura:
+    {{
+        "answer": "tu respuesta detallada aquí",
+        "confidence": 0.95,
+        "sources": [
+            {{
+                "doc_index": 1,
+                "excerpt": "texto relevante del documento"
+            }}
+        ],
+        "key_points": ["punto clave 1", "punto clave 2"],
+        "warnings": []
+    }}
 
-Contexto disponible:
-{context}
+    Contexto disponible:
+    {context}
 
-Metadata de documentos:
-{metadata}
+    Metadata de documentos:
+    {metadata}
 
-Reglas:
-1. SIEMPRE responde en formato JSON válido
-2. La respuesta debe estar basada ÚNICAMENTE en el contexto proporcionado
-3. Si no encuentras información relevante, tu answer debe ser "No se encontró información relevante en los documentos disponibles"
-4. confidence debe ser un número entre 0 y 1 que refleje qué tan seguro estás de tu respuesta
-5. sources debe incluir los índices de los documentos que usaste
-6. key_points debe resumir los puntos principales de tu respuesta
-7. warnings debe incluir cualquier advertencia o limitación de tu respuesta"""
+    Reglas:
+    1. SIEMPRE responde en formato JSON válido
+    2. La respuesta debe estar basada ÚNICAMENTE en el contexto proporcionado
+    3. Si no encuentras información relevante, tu answer debe ser "No se encontró información relevante en los documentos disponibles"
+    4. confidence debe ser un número entre 0 y 1 que refleje qué tan seguro estás de tu respuesta
+    5. sources debe incluir los índices de los documentos que usaste
+    6. key_points debe resumir los puntos principales de tu respuesta
+    7. warnings debe incluir cualquier advertencia o limitación de tu respuesta
+    
+    IMPORTANTE para preguntas sobre tipos de contratos:
+    - Revisa TODOS los documentos en el contexto
+    - Lista TODOS los tipos diferentes que encuentres
+    - Los tipos comunes incluyen: arrendamiento, gestión hotelera, franquicia, servicios, mantenimiento, compraventa
+    - Si un documento menciona un tipo específico de contrato, inclúyelo en tu respuesta
+    """
 
         messages = [{"role": "system", "content": system_prompt}]
         
-        # Agregar historial si existe
+        # Agregar historial si existe - CORREGIDO
         if conversation_history:
             for msg in conversation_history[-6:]:  # Últimos 6 mensajes
-                messages.append(msg)
+                # Asegurarse de que el contenido sea string
+                content = msg.get('content', '')
                 
+                # Si el contenido es un diccionario (error anterior), convertir a string
+                if isinstance(content, dict):
+                    # Intentar extraer el texto de la respuesta
+                    if 'answer' in content:
+                        content = content['answer']
+                    elif 'error' in content:
+                        content = f"Error: {content['error']}"
+                    else:
+                        content = str(content)
+                
+                # Asegurarse de que sea string
+                content = str(content)
+                
+                messages.append({
+                    "role": msg.get('role', 'user'),
+                    "content": content
+                })
+        
         # User prompt
         user_prompt = f"Pregunta: {query}\n\nRecuerda responder en formato JSON."
         messages.append({"role": "user", "content": user_prompt})

@@ -90,15 +90,10 @@ class VectorStore:
             
         logger.info("Inicializando ChromaDB...")
         
-        # Configurar ChromaDB
-        chroma_settings = ChromaSettings(
-            chroma_db_impl="duckdb+parquet",
-            persist_directory=self.config.persist_directory,
-            anonymized_telemetry=False
+        # Crear cliente persistente con la nueva API
+        self.chroma_client = chromadb.PersistentClient(
+            path=self.config.persist_directory
         )
-        
-        # Crear cliente
-        self.chroma_client = chromadb.Client(chroma_settings)
         
         # Crear o obtener colección
         try:
@@ -180,7 +175,7 @@ class VectorStore:
             "chunks_per_second": len(chunks) / elapsed_time if elapsed_time > 0 else 0
         }
         
-        logger.info(f"Chunks agregados exitosamente: {result}")
+        logger.info(f"Chunks agregados correctamente: {result}")
         
         return result
         
@@ -499,7 +494,7 @@ class VectorStore:
         with open(stats_path, 'w') as f:
             json.dump(self.stats, f, indent=2)
             
-        logger.info("Índice guardado exitosamente")
+        logger.info("Índice guardado correctamente")
         
     def get_stats(self) -> Dict[str, Any]:
         """Obtiene estadísticas del vector store"""

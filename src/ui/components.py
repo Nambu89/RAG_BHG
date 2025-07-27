@@ -330,7 +330,7 @@ class UIComponents:
     def render_success_animation():
         """Renderiza una animación de éxito"""
         st.balloons()
-        st.success("✅ ¡Operación completada exitosamente!")
+        st.success("✅ ¡Operación completada correctamente!")
         
     @staticmethod
     def render_file_upload_zone():
