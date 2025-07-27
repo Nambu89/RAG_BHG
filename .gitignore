@@ -1,0 +1,323 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+venv_mvp_rag/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Project specific - Athenea RAG
+data/contracts/*
+data/processed/*
+data/vector_store/*
+!data/contracts/.gitkeep
+!data/processed/.gitkeep
+!data/vector_store/.gitkeep
+
+# Vector stores
+vector_stores/
+*.db
+*.sqlite
+*.sqlite3
+chroma_db/
+faiss_index/
+chromadb/
+
+# Models
+models/downloaded/*
+!models/downloaded/.gitkeep
+*.bin
+*.pt
+*.pth
+*.onnx
+*.h5
+
+# Logs
+logs/
+*.log
+log.txt
+athenea.log
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+temp_uploads/
+
+# API keys and secrets
+.env
+.env.local
+.env.*.local
+secrets.json
+credentials.json
+config/secrets.yaml
+.streamlit/secrets.toml
+
+# Output files
+output/
+results/
+reports/
+*.csv
+*.xlsx
+*.xls
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+test_results/
+
+# Documentation build
+docs/_build/
+docs/site/
+
+# Streamlit
+.streamlit/
+!.streamlit/config.toml
+
+# ML artifacts
+mlruns/
+wandb/
+tensorboard/
+
+# Cache
+cache/
+.cache/
+__pycache__/
+
+# Large files
+*.pdf
+*.docx
+*.doc
+!data/contracts/*.pdf
+!data/contracts/*.docx
+!data/contracts/*.doc
+!data/samples/*
+
+# Ignore all .pyc files
+*.pyc
+
+# Ignore node_modules if using any JS
+node_modules/
+
+# Ignore package-lock.json
+package-lock.json
+yarn.lock
+
+# Spacy models
+*.tar.gz
+es_core_news_sm/
+en_core_web_sm/
+
+# ChromaDB specific
+.chroma/
+chroma.sqlite3
+
+# FAISS specific
+*.faiss
+*.pkl
+
+# Azure specific
+.azure/
+azure.json
+
+# Docker
+*.pid
+docker-compose.override.yml
+.dockerignore
+
+# Testing data
+test_data/
+mock_data/
+
+# Performance profiling
+*.prof
+*.lprof
+.benchmarks/
+
+# Security
+*.pem
+*.key
+*.crt
+*.cer
+
+# Editor backups
+*~
+.*.swp
+.*.swo
+
+# macOS metadata
+.Spotlight-V100
+.Trashes
+
+# Windows metadata
+Desktop.ini
+Thumbs.db
+
+# Linux metadata
+.directory
+
+# Athenea specific ignored patterns
+athenea_*.log
+*.athenea.bak
+.athenea_cache/
