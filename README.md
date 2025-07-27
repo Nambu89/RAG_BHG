@@ -9,7 +9,7 @@
 
 ## 📋 Descripción
 
-Athenea RAG es un sistema avanzado de Retrieval-Augmented Generation (RAG) diseñado específicamente para el Barceló Hotel Group. Permite realizar consultas inteligentes sobre contratos y documentos legales en lenguaje natural, proporcionando respuestas precisas con trazabilidad completa.
+BHG RAG es un sistema avanzado de Retrieval-Augmented Generation (RAG) diseñado específicamente para el Barceló Hotel Group. Permite realizar consultas inteligentes sobre contratos y documentos legales en lenguaje natural, proporcionando respuestas precisas con trazabilidad completa.
 
 ### ✨ Características Principales
 
@@ -31,8 +31,8 @@ Athenea RAG es un sistema avanzado de Retrieval-Augmented Generation (RAG) dise�
 
 1. **Clonar el repositorio**
 ```bash
-git clone https://github.com/your-org/athenea-rag-mvp.git
-cd athenea-rag-mvp
+git clone https://github.com/Nambu89/RAG_BHG
+cd bhg-rag-mvp
 ```
 
 2. **Crear entorno virtual**
@@ -217,13 +217,6 @@ Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 - **Arquitecto IA**: Diseño del sistema RAG
 - **Desarrollador**: Implementación y optimización
 - **QA**: Pruebas y validación
-
-## 📞 Contacto
-
-Para soporte o consultas sobre el proyecto:
-- Email: soporte@athenea-rag.com
-- Documentation: [Wiki del Proyecto](https://wiki.athenea-rag.com)
-
 ---
 
 <div align="center">
