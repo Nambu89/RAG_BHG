@@ -1,0 +1,135 @@
+{
+    "name": "BHG RAG Development",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "..",
+        "args": {
+            "VARIANT": "3.11-bullseye",
+            "NODE_VERSION": "none"
+        }
+    },
+    
+    // Features to add to the dev container
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "configureZshAsDefaultShell": true,
+            "installOhMyZsh": true,
+            "upgradePackages": true,
+            "username": "vscode",
+            "userUid": "1000",
+            "userGid": "1000"
+        },
+        "ghcr.io/devcontainers/features/python:1": {
+            "installTools": true,
+            "version": "3.11"
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "latest",
+            "ppa": false
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest",
+            "moby": true
+        }
+    },
+
+    // Configure VS Code settings
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": true,
+                "python.formatting.provider": "black",
+                "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
+                "python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
+                "python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
+                "python.linting.flake8Path": "/usr/local/py-utils/bin/flake8",
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+                "editor.formatOnSave": true,
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": true
+                },
+                "files.trimTrailingWhitespace": true,
+                "files.insertFinalNewline": true,
+                "terminal.integrated.defaultProfile.linux": "zsh"
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.black-formatter",
+                "ms-toolsai.jupyter",
+                "ms-toolsai.jupyter-keymap",
+                "ms-toolsai.jupyter-renderers",
+                "ms-toolsai.vscode-jupyter-cell-tags",
+                "ms-toolsai.vscode-jupyter-slideshow",
+                "GitHub.copilot",
+                "GitHub.copilot-chat",
+                "eamodio.gitlens",
+                "mhutchie.git-graph",
+                "donjayamanne.githistory",
+                "streetsidesoftware.code-spell-checker",
+                "streetsidesoftware.code-spell-checker-spanish",
+                "redhat.vscode-yaml",
+                "ms-vscode.makefile-tools",
+                "yzhang.markdown-all-in-one",
+                "DavidAnson.vscode-markdownlint",
+                "bierner.markdown-mermaid",
+                "ms-vscode.live-server",
+                "ritwickdey.LiveServer",
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "usernamehw.errorlens",
+                "christian-kohler.path-intellisense",
+                "aaron-bond.better-comments",
+                "wayou.vscode-todo-highlight",
+                "gruntfuggly.todo-tree",
+                "njpwerner.autodocstring",
+                "KevinRose.vsc-python-indent",
+                "ms-python.isort",
+                "charliermarsh.ruff",
+                "tamasfe.even-better-toml",
+                "bungcip.better-toml"
+            ]
+        }
+    },
+
+    // Port forwarding
+    "forwardPorts": [
+        8501,  // Streamlit
+        8000,  // FastAPI
+        9090,  // Metrics
+        6333   // Qdrant (if used)
+    ],
+    
+    // Environment variables
+    "containerEnv": {
+        "PYTHONPATH": "/workspaces/athenea-rag-mvp/src",
+        "ENVIRONMENT": "development"
+    },
+    
+    // Run commands after container is created
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    
+    // Run commands after container is started
+    "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+    
+    // Run as non-root user
+    "remoteUser": "vscode",
+    
+    // Mounts
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
+        "source=bhg-venv,target=/workspaces/bhg-rag-mvp/venv,type=volume"
+    ],
+    
+    // Resource limits
+    "runArgs": [
+        "--memory=8g",
+        "--cpus=4",
+        "--shm-size=2g"
+    ]
+}
