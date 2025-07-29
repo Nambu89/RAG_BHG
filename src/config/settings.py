@@ -38,10 +38,10 @@ class VectorStoreConfig:
 @dataclass
 class SearchConfig:
     """Configuración para búsqueda híbrida"""
-    top_k_vector: int = 30
-    top_k_keyword: int = 30
-    top_k_final: int = 10
-    similarity_threshold: float = 0.5
+    top_k_vector: int = 50
+    top_k_keyword: int = 50
+    top_k_final: int = 20
+    similarity_threshold: float = 0.2
     rerank_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     enable_hyde: bool = True  # Hypothetical Document Embeddings
     

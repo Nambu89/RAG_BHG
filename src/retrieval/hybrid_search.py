@@ -31,7 +31,7 @@ class HybridSearchEngine:
         self.config = settings.search  # Agregar configuración
         
         # Parámetros BM25
-        self.bm25_k1 = 1.5
+        self.bm25_k1 = 1.2
         self.bm25_b = 0.75
         self.avg_doc_length = 100.0  # Valor por defecto para evitar división por cero
         self.total_docs = 0

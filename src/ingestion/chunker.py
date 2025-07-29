@@ -4,9 +4,17 @@ from dataclasses import dataclass
 import hashlib
 import tiktoken
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import spacy
+# import spacy
 from collections import Counter
 import json
+
+
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+    spacy = None
 
 from ..config.settings import settings
 from ..utils.logger import get_logger
@@ -52,13 +60,25 @@ class SmartChunker:
         # Inicializar tokenizer para contar tokens con precisión
         self.encoding = tiktoken.encoding_for_model("gpt-4")
         
+        # # Cargar modelo spaCy para análisis lingüístico (opcional)
+        # try:
+        #     self.nlp = spacy.load("es_core_news_sm")
+        #     logger.info("Modelo spaCy cargado para chunking inteligente")
+        # except:
+        #     self.nlp = None
+        #     logger.warning("Modelo spaCy no disponible, usando chunking básico")
+
         # Cargar modelo spaCy para análisis lingüístico (opcional)
-        try:
-            self.nlp = spacy.load("es_core_news_sm")
-            logger.info("Modelo spaCy cargado para chunking inteligente")
-        except:
+        if SPACY_AVAILABLE:
+            try:
+                self.nlp = spacy.load("es_core_news_sm")
+                logger.info("Modelo spaCy cargado para chunking inteligente")
+            except:
+                self.nlp = None
+                logger.warning("Modelo spaCy no disponible, usando chunking básico")
+        else:
             self.nlp = None
-            logger.warning("Modelo spaCy no disponible, usando chunking básico")
+            logger.warning("spaCy no está instalado. El chunking inteligente no funcionará.")
             
         # Inicializar splitter de LangChain como base
         self.base_splitter = RecursiveCharacterTextSplitter(
