@@ -31,7 +31,7 @@ class HybridSearchEngine:
         self.config = settings.search  # Agregar configuración
         
         # Parámetros BM25
-        self.bm25_k1 = 1.5
+        self.bm25_k1 = 1.2
         self.bm25_b = 0.75
         self.avg_doc_length = 100.0  # Valor por defecto para evitar división por cero
         self.total_docs = 0
@@ -42,6 +42,20 @@ class HybridSearchEngine:
         self.cache_size = 100
         
         logger.info("Motor de búsqueda híbrida inicializado")
+
+    def _is_inventory_query(self, query: str) -> bool:
+        """Detecta si es una consulta sobre inventario/tipos"""
+        inventory_phrases = [
+            'tipos de contratos',
+            'qué contratos',
+            'cuántos tipos',
+            'tipos disponibles',
+            'qué tipos de',
+            'listar todos los contratos',
+            'contratos en el sistema'
+        ]
+        query_lower = query.lower()
+        return any(phrase in query_lower for phrase in inventory_phrases)
         
     def search(
         self,
@@ -64,6 +78,17 @@ class HybridSearchEngine:
         top_k = top_k or self.config.top_k_final
         
         logger.info(f"Búsqueda {search_type}: '{query[:50]}...'")
+
+
+        # Detectar consultas de inventario
+        if self._is_inventory_query(query):
+            logger.info("Consulta de inventario detectada - ajustando estrategia")
+            # Aumentar top_k para capturar más diversidad
+            top_k = min(top_k * 4, 20)
+            # Agregar keywords de boost para tipos conocidos
+            if not boost_keywords:
+                boost_keywords = []
+            boost_keywords.extend(['gestión', 'arrendamiento', 'franquicia', 'mantenimiento', 'servicios'])
         
         if search_type == "vector":
             return self._vector_search(query, top_k, filters)

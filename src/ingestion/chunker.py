@@ -4,9 +4,17 @@ from dataclasses import dataclass
 import hashlib
 import tiktoken
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import spacy
+# import spacy
 from collections import Counter
 import json
+
+
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+    spacy = None
 
 from ..config.settings import settings
 from ..utils.logger import get_logger
@@ -52,13 +60,25 @@ class SmartChunker:
         # Inicializar tokenizer para contar tokens con precisión
         self.encoding = tiktoken.encoding_for_model("gpt-4")
         
+        # # Cargar modelo spaCy para análisis lingüístico (opcional)
+        # try:
+        #     self.nlp = spacy.load("es_core_news_sm")
+        #     logger.info("Modelo spaCy cargado para chunking inteligente")
+        # except:
+        #     self.nlp = None
+        #     logger.warning("Modelo spaCy no disponible, usando chunking básico")
+
         # Cargar modelo spaCy para análisis lingüístico (opcional)
-        try:
-            self.nlp = spacy.load("es_core_news_sm")
-            logger.info("Modelo spaCy cargado para chunking inteligente")
-        except:
+        if SPACY_AVAILABLE:
+            try:
+                self.nlp = spacy.load("es_core_news_sm")
+                logger.info("Modelo spaCy cargado para chunking inteligente")
+            except:
+                self.nlp = None
+                logger.warning("Modelo spaCy no disponible, usando chunking básico")
+        else:
             self.nlp = None
-            logger.warning("Modelo spaCy no disponible, usando chunking básico")
+            logger.warning("spaCy no está instalado. El chunking inteligente no funcionará.")
             
         # Inicializar splitter de LangChain como base
         self.base_splitter = RecursiveCharacterTextSplitter(
@@ -104,6 +124,14 @@ class SmartChunker:
         
         # Detectar estructura del documento
         doc_structure = self._analyze_document_structure(content)
+
+        # NUEVO: Asegurar que el primer chunk contenga información del tipo
+        contract_type = base_metadata.get('contract_type', '')
+        if contract_type and contract_type != 'otros':
+            # Insertar el tipo de contrato al inicio si no está ya presente
+            type_header = f"TIPO DE CONTRATO: {contract_type.upper()}\n\n"
+            if contract_type.lower() not in content[:500].lower():
+                content = type_header + content
         
         # Elegir estrategia de chunking basada en la estructura
         if doc_structure["has_sections"]:

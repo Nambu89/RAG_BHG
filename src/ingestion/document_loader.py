@@ -321,23 +321,73 @@ class DocumentLoader:
             
         return metadata
         
+    # def _detect_contract_type(self, content: str) -> Optional[str]:
+    #     """Detecta el tipo de contrato basándose en palabras clave"""
+    #     content_lower = content.lower()
+        
+    #     contract_types = {
+    #         "arrendamiento": ["arrendamiento", "alquiler", "renta", "inquilino", "arrendador"],
+    #         "gestión": ["gestión hotelera", "management", "operación hotelera", "gestor"],
+    #         "préstamo": ["préstamo", "crédito", "financiación", "prestamista", "deudor"],
+    #         "compraventa": ["compraventa", "compra", "venta", "vendedor", "comprador"],
+    #         "servicios": ["servicios", "prestación", "proveedor", "contratista"]
+    #     }
+        
+    #     for contract_type, keywords in contract_types.items():
+    #         if any(keyword in content_lower for keyword in keywords):
+    #             return contract_type
+                
+    #     return None
+
     def _detect_contract_type(self, content: str) -> Optional[str]:
         """Detecta el tipo de contrato basándose en palabras clave"""
         content_lower = content.lower()
         
+        # IMPORTANTE: El orden importa - buscar primero los más específicos
         contract_types = {
-            "arrendamiento": ["arrendamiento", "alquiler", "renta", "inquilino", "arrendador"],
-            "gestión": ["gestión hotelera", "management", "operación hotelera", "gestor"],
+            "franquicia": ["franquicia", "franquiciador", "franquiciado", "royalty", "fee de marketing", "occidental hotels & resorts"],
+            "mantenimiento": ["mantenimiento", "servicios de mantenimiento", "preventivo", "correctivo", "technical maintenance"],
+            "gestión": ["gestión hotelera", "management", "operación hotelera", "gestor", "barceló hotel group"],
+            "arrendamiento": ["arrendamiento", "alquiler", "renta", "inquilino", "arrendador", "local de negocio"],
             "préstamo": ["préstamo", "crédito", "financiación", "prestamista", "deudor"],
             "compraventa": ["compraventa", "compra", "venta", "vendedor", "comprador"],
             "servicios": ["servicios", "prestación", "proveedor", "contratista"]
         }
         
+        # Buscar en el título o primeras líneas (más confiable)
+        first_lines = content[:1000].lower()
+        
+        # Búsqueda estricta en el título/inicio
         for contract_type, keywords in contract_types.items():
-            if any(keyword in content_lower for keyword in keywords):
-                return contract_type
-                
-        return None
+            for keyword in keywords:
+                # Buscar coincidencias más específicas primero
+                if contract_type == "franquicia" and "contrato de franquicia" in first_lines:
+                    return "franquicia"
+                elif contract_type == "mantenimiento" and "servicios de mantenimiento" in first_lines:
+                    return "mantenimiento"
+                elif keyword in first_lines:
+                    return contract_type
+        
+        # Si no encontramos en el título, buscar en todo el documento
+        # pero con un scoring para evitar falsos positivos
+        scores = {}
+        for contract_type, keywords in contract_types.items():
+            score = 0
+            for keyword in keywords:
+                if keyword in content_lower:
+                    # Dar más peso a palabras más específicas
+                    if len(keyword) > 10:  # Palabras largas son más específicas
+                        score += 2
+                    else:
+                        score += 1
+            if score > 0:
+                scores[contract_type] = score
+        
+        # Retornar el tipo con mayor score
+        if scores:
+            return max(scores.items(), key=lambda x: x[1])[0]
+            
+        return "otros" 
         
     def _extract_dates(self, content: str) -> List[str]:
         """Extrae fechas del contenido"""
