@@ -208,10 +208,52 @@ class VectorStore:
                 **metadata,
                 "chunk_id": id_
             })
+
+    def get_unique_contract_types(self) -> List[Dict[str, Any]]:
+        """Obtiene todos los tipos únicos de contratos en el sistema"""
+        contract_types = {}
+        
+        if self.store_type == "chromadb" and CHROMADB_AVAILABLE:
+            try:
+                # Obtener todos los documentos con su metadata
+                results = self.collection.get(
+                    include=["metadatas", "documents"]
+                )
+                
+                for i, metadata in enumerate(results.get('metadatas', [])):
+                    contract_type = metadata.get('contract_type', 'otros')
+                    if contract_type not in contract_types:
+                        contract_types[contract_type] = {
+                            'type': contract_type,
+                            'example_doc': metadata.get('filename', 'Desconocido'),
+                            'chunk_id': results['ids'][i] if 'ids' in results else str(i),
+                            'sample_content': results['documents'][i][:200] if 'documents' in results else ''
+                        }
+                        
+            except Exception as e:
+                logger.error(f"Error obteniendo tipos de contratos: {e}")
+                
+        elif self.store_type == "faiss" and FAISS_AVAILABLE:
+            for i, metadata in enumerate(self.faiss_metadata):
+                contract_type = metadata.get('contract_type', 'otros')
+                if contract_type not in contract_types:
+                    contract_types[contract_type] = {
+                        'type': contract_type,
+                        'example_doc': metadata.get('filename', 'Desconocido'),
+                        'chunk_id': metadata.get('chunk_id', str(i)),
+                        'sample_content': self.faiss_documents[i][:200] if i < len(self.faiss_documents) else ''
+                    }
+        
+        return list(contract_types.values())
             
     def search(self, query: str, top_k: int = None, filter_dict: Dict = None) -> List[Dict[str, Any]]:
         """Búsqueda vectorial con opciones avanzadas"""
         top_k = top_k or settings.search.top_k_final
+
+        # Detectar si es una consulta sobre tipos de contratos
+        if any(phrase in query.lower() for phrase in ['tipos de contratos', 'qué contratos', 'tipos disponibles']):
+            logger.info("Detectada consulta sobre tipos de contratos - usando estrategia especial")
+            return self._search_all_contract_types(query, top_k)
         
         logger.info(f"Búsqueda: '{query[:50]}...', top_k={top_k}")
         
@@ -431,6 +473,74 @@ class VectorStore:
         
         return results[:top_k]
         
+    def _search_all_contract_types(self, query: str, top_k: int) -> List[Dict[str, Any]]:
+        """Búsqueda especial para obtener todos los tipos de contratos"""
+        contract_types = self.get_unique_contract_types()
+        
+        # Obtener al menos un chunk representativo de cada tipo
+        results = []
+        for contract_info in contract_types:
+            # Buscar específicamente chunks de este tipo de contrato
+            type_results = self._search_by_contract_type(contract_info['type'], limit=2)
+            results.extend(type_results)
+        
+        # Generar embedding de la query para calcular scores
+        query_embedding = self.embeddings.embed_query(query)
+        
+        # Asignar scores basados en relevancia
+        for result in results:
+            # Aquí podrías calcular la similitud real, por ahora uso un score alto
+            result['score'] = 0.8 + (0.1 if result['metadata'].get('contract_type') else 0)
+        
+        # Ordenar por score y limitar
+        results.sort(key=lambda x: x['score'], reverse=True)
+        return results[:top_k * 2]  # Retornar más resultados para cubrir todos los tipos
+    
+    def _search_by_contract_type(self, contract_type: str, limit: int = 2) -> List[Dict[str, Any]]:
+        """Busca chunks por tipo de contrato"""
+        if self.store_type == "chromadb" and CHROMADB_AVAILABLE:
+            try:
+                results = self.collection.query(
+                    query_texts=[""],  # Query vacía
+                    where={"contract_type": contract_type},
+                    n_results=limit,
+                    include=["metadatas", "documents", "distances"]
+                )
+                
+                formatted_results = []
+                if results['ids']:
+                    for i in range(len(results['ids'][0])):
+                        formatted_results.append({
+                            "chunk_id": results['ids'][0][i],
+                            "content": results['documents'][0][i],
+                            "metadata": results['metadatas'][0][i],
+                            "score": 0.8,  # Score alto por ser búsqueda directa
+                            "rank": i + 1
+                        })
+                return formatted_results
+                
+            except Exception as e:
+                logger.error(f"Error en búsqueda por tipo: {e}")
+                return []
+                
+        elif self.store_type == "faiss" and FAISS_AVAILABLE:
+            results = []
+            for i, metadata in enumerate(self.faiss_metadata):
+                if metadata.get('contract_type') == contract_type and len(results) < limit:
+                    results.append({
+                        "chunk_id": metadata.get('chunk_id', str(i)),
+                        "content": self.faiss_documents[i],
+                        "metadata": metadata,
+                        "score": 0.8,
+                        "rank": len(results) + 1
+                    })
+            return results
+        
+        return []
+    
+    
+    
+    
     def _reciprocal_rank_fusion(self, result_lists: List[List[Dict]], k: int = 60) -> List[Dict]:
         """Implementa Reciprocal Rank Fusion para combinar múltiples rankings"""
         # Diccionario para acumular scores

@@ -48,4 +48,4 @@ plotly>=5.18.0
 # OPTIONAL DEPENDENCIES
 # =========================
 # Si quieres usar spaCy (opcional):
-spacy>=3.7.0
+# spacy>=3.7.0

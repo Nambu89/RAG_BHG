@@ -19,6 +19,31 @@ from src.embeddings.vector_store import VectorStore
 from src.generation.response_generator import ResponseGenerator
 from src.utils.logger import get_logger
 
+def get_all_contract_types_from_store():
+    """Obtiene todos los tipos únicos de contratos en el sistema"""
+    if not st.session_state.vector_store:
+        return []
+    
+    try:
+        contract_types = st.session_state.vector_store.get_unique_contract_types()
+        return contract_types
+    except AttributeError:
+        # Si el método no existe en vector_store, usar método alternativo
+        logger.warning("Método get_unique_contract_types no encontrado, usando método alternativo")
+        return []
+
+def is_contract_types_query(query: str) -> bool:
+    """Detecta si la consulta es sobre tipos de contratos"""
+    query_lower = query.lower()
+    patterns = [
+        'tipos de contratos',
+        'qué tipos de contratos',
+        'tipos disponibles',
+        'clases de contratos',
+        'cuántos tipos de contratos'
+    ]
+    return any(pattern in query_lower for pattern in patterns)
+
 logger = get_logger(__name__)
 
 # Configuración de la página
@@ -238,16 +263,121 @@ def chat_interface():
                     st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
                     st.error(error_msg)
 
+# def process_query(query: str) -> Dict[str, Any]:
+#     """Procesa una consulta del usuario"""
+    
+#     start_time = time.time()
+    
+#     try:
+#         # Configuración de búsqueda
+#         search_config = st.session_state.get('search_config', {})
+#         top_k = search_config.get('top_k', 5)
+#         search_type = search_config.get('search_type', 'hybrid')
+        
+#         # Realizar búsqueda
+#         if search_type == "Híbrida (Recomendado)":
+#             search_results = st.session_state.vector_store.hybrid_search(query, top_k)
+#         elif search_type == "Solo Vectorial":
+#             search_results = st.session_state.vector_store.search(query, top_k)
+#         else:  # Solo Keywords
+#             search_results = st.session_state.vector_store._keyword_search(query, top_k)
+            
+#         # Generar respuesta
+#         response = st.session_state.response_generator.generate_response(
+#             query=query,
+#             search_results=search_results,
+#             conversation_history=st.session_state.chat_history[-6:]  # Últimos 3 intercambios
+#         )
+        
+#         # Actualizar métricas
+#         elapsed_time = time.time() - start_time
+#         update_metrics(response, elapsed_time)
+        
+#         return response
+        
+#     except Exception as e:
+#         logger.error(f"Error procesando consulta: {str(e)}")
+#         return {
+#             "query": query,
+#             "answer": "Lo siento, ocurrió un error al procesar tu consulta. Por favor, intenta de nuevo.",
+#             "confidence": 0.0,
+#             "sources": [],
+#             "warnings": [str(e)],
+#             "metadata": {"error": True}
+#         }
+
 def process_query(query: str) -> Dict[str, Any]:
     """Procesa una consulta del usuario"""
     
     start_time = time.time()
     
     try:
-        # Configuración de búsqueda
+        # NUEVO: Detectar si es una consulta sobre tipos de contratos
+        if is_contract_types_query(query):
+            logger.info("Detectada consulta sobre tipos de contratos")
+            
+            # Obtener todos los tipos de contratos
+            contract_types = get_all_contract_types_from_store()
+            
+            if contract_types:
+                # Crear una respuesta especial para tipos de contratos
+                types_list = list(set([ct.get('type', 'desconocido') for ct in contract_types]))
+                
+                # Crear respuesta formateada
+                if len(types_list) > 0:
+                    response_text = f"Los tipos de contratos disponibles en el sistema son:\n\n"
+                    for i, tipo in enumerate(types_list, 1):
+                        response_text += f"{i}. **{tipo.capitalize()}**\n"
+                    
+                    # Buscar chunks representativos de cada tipo
+                    search_results = []
+                    for ct in contract_types:
+                        # Buscar 1-2 chunks de cada tipo
+                        type_results = st.session_state.vector_store.search(
+                            f"contrato de {ct.get('type', '')}",
+                            top_k=2,
+                            filter_dict={"contract_type": ct.get('type')}
+                        )
+                        search_results.extend(type_results[:1])  # Solo 1 por tipo
+                    
+                    response = {
+                        "query": query,
+                        "answer": response_text,
+                        "confidence": 0.95,
+                        "sources": [
+                            {
+                                "document": result.get('metadata', {}).get('filename', 'Desconocido'),
+                                "section": result.get('metadata', {}).get('section', ''),
+                                "excerpt": result.get('content', '')[:200] + '...',
+                                "relevance": result.get('score', 0),
+                                "chunk_id": result.get('chunk_id', '')
+                            }
+                            for result in search_results
+                        ],
+                        "key_points": [f"Total de {len(types_list)} tipos de contratos identificados"],
+                        "warnings": [],
+                        "metadata": {
+                            "contract_types_found": types_list,
+                            "total_types": len(types_list)
+                        }
+                    }
+                    
+                    elapsed_time = time.time() - start_time
+                    update_metrics(response, elapsed_time)
+                    
+                    return response
+            
+            # Si no se encontraron tipos o falló el método especial, continuar con búsqueda normal
+            logger.warning("No se pudieron obtener tipos de contratos con método especial, usando búsqueda normal")
+        
+        # Configuración de búsqueda normal
         search_config = st.session_state.get('search_config', {})
         top_k = search_config.get('top_k', 5)
         search_type = search_config.get('search_type', 'hybrid')
+        
+        # Para consultas de tipos, aumentar top_k
+        if is_contract_types_query(query):
+            top_k = min(top_k * 4, 20)  # Buscar más resultados
         
         # Realizar búsqueda
         if search_type == "Híbrida (Recomendado)":

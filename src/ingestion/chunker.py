@@ -124,6 +124,14 @@ class SmartChunker:
         
         # Detectar estructura del documento
         doc_structure = self._analyze_document_structure(content)
+
+        # NUEVO: Asegurar que el primer chunk contenga información del tipo
+        contract_type = base_metadata.get('contract_type', '')
+        if contract_type and contract_type != 'otros':
+            # Insertar el tipo de contrato al inicio si no está ya presente
+            type_header = f"TIPO DE CONTRATO: {contract_type.upper()}\n\n"
+            if contract_type.lower() not in content[:500].lower():
+                content = type_header + content
         
         # Elegir estrategia de chunking basada en la estructura
         if doc_structure["has_sections"]:

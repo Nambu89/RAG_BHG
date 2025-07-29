@@ -41,7 +41,7 @@ class SearchConfig:
     top_k_vector: int = 50
     top_k_keyword: int = 50
     top_k_final: int = 20
-    similarity_threshold: float = 0.2
+    similarity_threshold: float = 0.15
     rerank_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     enable_hyde: bool = True  # Hypothetical Document Embeddings
     
